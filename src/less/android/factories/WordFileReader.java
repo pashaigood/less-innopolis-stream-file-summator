@@ -6,6 +6,8 @@ import less.android.utils.WordChecker;
 import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
+import java.nio.file.*;
 import java.util.concurrent.ThreadLocalRandom;
 
 public class WordFileReader extends Thread {
@@ -20,7 +22,20 @@ public class WordFileReader extends Thread {
     @Override
     public void run() {
         read();
-//        System.out.printf("%s is readed.\n", fileName);
+//        watch();
+    }
+
+    private void watch() {
+        DirectoryWatcher.getWatcher(Paths.get(fileName).getParent().toString(), (e) -> {});
+    }
+
+    private void readNIO() {
+        Path pathToFile = Paths.get(fileName);
+        try {
+            BufferedReader fileBuffer = Files.newBufferedReader(pathToFile);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
     private void read() {
@@ -29,13 +44,6 @@ public class WordFileReader extends Thread {
             while ((line = file.readLine()) != null) {
                 for (String word : WordChecker.getWordsFromString(line)) {
                     if (! fileWordOperator.isShutdown()) {
-                        /*try {
-                            // simulate long working.
-                            Thread.sleep(ThreadLocalRandom.current().nextInt(10, 20) * 10);
-                        } catch (InterruptedException e) {
-                            System.out.println(fileName + " is not required anymore.");
-                            return;
-                        }*/
                         fileWordOperator.addWord(word);
                     } else {
                         System.out.println(fileWordOperator.getName() + " is finished.");

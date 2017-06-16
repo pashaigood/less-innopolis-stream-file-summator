@@ -33,7 +33,6 @@ public abstract class FileWordOperator extends Thread {
             poolExecutor.execute(child);
         }
 
-
         poolExecutor.shutdown();
         while (! poolExecutor.isTerminated()) {
             synchronized (poolExecutor) {
