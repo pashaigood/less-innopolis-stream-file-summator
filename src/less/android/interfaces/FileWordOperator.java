@@ -2,7 +2,6 @@ package less.android.interfaces;
 
 import less.android.factories.WordFileReader;
 import java.util.Arrays;
-import java.util.stream.Stream;
 
 public abstract class FileWordOperator extends Thread {
     private final String[] files;
@@ -26,8 +25,11 @@ public abstract class FileWordOperator extends Thread {
 
     @Override
     public void run() {
-        wordFileReaders = Arrays.stream(files).map(file -> new WordFileReader(file, this)).toArray(WordFileReader[]::new);
-        Arrays.stream(wordFileReaders).parallel().forEach(WordFileReader::read);
+        wordFileReaders = Arrays.stream(files).map(WordFileReader::new).toArray(WordFileReader[]::new);
+        Arrays.stream(wordFileReaders).parallel().forEach(wordFileReaders -> {
+            wordFileReaders.onNewWord(this::addWord);
+            wordFileReaders.read();
+        });
 
         if (! isShutdown) {
             this.onFinish();

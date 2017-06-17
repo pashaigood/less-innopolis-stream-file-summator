@@ -11,8 +11,9 @@ public class Summator extends FileWordOperator {
 
     public Summator(String[] files) {
         super(files);
-        numbers = new ArrayList<>();
-        numbers.add(0);
+        numbers = new ArrayList<Integer>() {{
+            add(0);
+        }};
     }
 
     @Override
@@ -20,6 +21,7 @@ public class Summator extends FileWordOperator {
         Integer number = Integer.parseInt(inputNumber);
 
         if (! WordChecker.check(inputNumber)) {
+            incorrentCount++;
             return;
         }
 
@@ -38,7 +40,7 @@ public class Summator extends FileWordOperator {
     }
 
     private Integer getResult() {
-        return numbers.stream().reduce((sum, value) -> sum + value).get();
+        return numbers.stream().reduce((sum, value) -> sum + value).orElse(0);
     }
 
     @Override

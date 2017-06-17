@@ -1,20 +1,21 @@
 package less.android.factories;
 
-import less.android.interfaces.FileWordOperator;
 import less.android.utils.WordChecker;
 
 import java.io.*;
 import java.nio.file.*;
+import java.util.ArrayList;
 import java.util.concurrent.ThreadLocalRandom;
+import java.util.function.Consumer;
 
 public class WordFileReader implements Closeable {
-    private FileWordOperator fileWordOperator;
     private String fileName;
     private boolean isClosed = false;
+    private ArrayList<Consumer<String>> consumers;
 
-    public WordFileReader(String fileName, FileWordOperator fileWordOperator) {
-        this.fileWordOperator = fileWordOperator;
+    public WordFileReader(String fileName) {
         this.fileName = fileName;
+        consumers = new ArrayList<>();
     }
 
     private void readNIO() {
@@ -26,15 +27,25 @@ public class WordFileReader implements Closeable {
         }
     }
 
+    private void simulateWork() {
+        if (! isClosed) {
+            int ext = 10;
+            try {
+                Thread.sleep(ThreadLocalRandom.current().nextInt(150 / ext, 300 / ext));
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
     private void bufferReader() {
         try(BufferedReader file = new BufferedReader(new FileReader(fileName))) {
             String line;
             while (! isClosed && (line = file.readLine()) != null) {
                 for (String word : WordChecker.getWordsFromString(line)) {
+                    simulateWork();
                     if (! isClosed) {
-                        int ext = 10;
-                        Thread.sleep(ThreadLocalRandom.current().nextInt(150 / ext, 300 / ext));
-                        fileWordOperator.addWord(word);
+                        consumers.forEach(consumer -> consumer.accept(word));
                     } else {
                         return;
                     }
@@ -51,7 +62,9 @@ public class WordFileReader implements Closeable {
 
     public void read() {
         System.out.println(fileName + " is reading...");
-        bufferReader();
+        if (consumers.size() != 0) {
+            bufferReader();
+        }
         System.out.println(fileName + " is readed");
     }
 
@@ -62,5 +75,9 @@ public class WordFileReader implements Closeable {
     @Override
     public void close() {
         this.isClosed = true;
+    }
+
+    public void onNewWord(Consumer<String> handler) {
+        consumers.add(handler);
     }
 }

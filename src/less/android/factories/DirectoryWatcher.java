@@ -38,7 +38,9 @@ public class DirectoryWatcher {
 
             while ((watchKey = watchService.take()) != null) {
                 for (WatchEvent<?> event: watchKey.pollEvents()) {
-                    onChange.accept(event);
+                    if (! isFileTemporary(event.context().toString())) {
+                        onChange.accept(event);
+                    }
                 }
                 watchKey.reset();
             }
@@ -47,5 +49,9 @@ public class DirectoryWatcher {
         } catch (InterruptedException e) {
             e.printStackTrace();
         }
+    }
+
+    private boolean isFileTemporary(String fileName) {
+        return fileName.contains("___jb_tmp___");
     }
 }
