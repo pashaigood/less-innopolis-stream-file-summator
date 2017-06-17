@@ -1,17 +1,15 @@
 package less.android.interfaces;
 
 import less.android.factories.WordFileReader;
-
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 public abstract class FileWordOperator extends Thread {
     private final String[] files;
-    protected final ExecutorService poolExecutor;
     volatile private boolean isShutdown = false;
+    private WordFileReader[] wordFileReaders;
 
     public FileWordOperator(String[] files) {
-        poolExecutor = Executors.newWorkStealingPool(10);
         this.files = files;
     }
 
@@ -20,35 +18,25 @@ public abstract class FileWordOperator extends Thread {
     }
 
     public void shutdown() {
-        poolExecutor.shutdownNow();
-        this.isShutdown = true;
+        Arrays.stream(wordFileReaders).forEach(WordFileReader::close);
+        isShutdown = true;
     }
 
     public abstract void addWord(String word);
 
     @Override
     public void run() {
-        for (String file: files) {
-            Thread child = new WordFileReader(file, this);
-            poolExecutor.execute(child);
-        }
+        wordFileReaders = Arrays.stream(files).map(file -> new WordFileReader(file, this)).toArray(WordFileReader[]::new);
+        Arrays.stream(wordFileReaders).parallel().forEach(WordFileReader::read);
 
-        poolExecutor.shutdown();
-        while (! poolExecutor.isTerminated()) {
-            synchronized (poolExecutor) {
-                try {
-                    poolExecutor.wait();
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
+        if (! isShutdown) {
+            this.onFinish();
+            System.out.println(getName() + " is processed files:");
+            for (String file: files) {
+                System.out.printf("     %s\n", file);
             }
         }
-
-        this.onFinish();
-        System.out.println(getName() + " is processed files:");
-        for (String file: files) {
-            System.out.printf("     %s\n", file);
-        }
+        shutdown();
     }
 
     protected void onFinish() {

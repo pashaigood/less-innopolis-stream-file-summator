@@ -3,30 +3,18 @@ package less.android.factories;
 import less.android.interfaces.FileWordOperator;
 import less.android.utils.WordChecker;
 
-import java.io.BufferedReader;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.nio.file.*;
 import java.util.concurrent.ThreadLocalRandom;
 
-public class WordFileReader extends Thread {
+public class WordFileReader implements Closeable {
     private FileWordOperator fileWordOperator;
     private String fileName;
+    private boolean isClosed = false;
 
     public WordFileReader(String fileName, FileWordOperator fileWordOperator) {
         this.fileWordOperator = fileWordOperator;
         this.fileName = fileName;
-    }
-
-    @Override
-    public void run() {
-        read();
-//        watch();
-    }
-
-    private void watch() {
-        DirectoryWatcher.getWatcher(Paths.get(fileName).getParent().toString(), (e) -> {});
     }
 
     private void readNIO() {
@@ -38,15 +26,16 @@ public class WordFileReader extends Thread {
         }
     }
 
-    private void read() {
+    private void bufferReader() {
         try(BufferedReader file = new BufferedReader(new FileReader(fileName))) {
             String line;
-            while ((line = file.readLine()) != null) {
+            while (! isClosed && (line = file.readLine()) != null) {
                 for (String word : WordChecker.getWordsFromString(line)) {
-                    if (! fileWordOperator.isShutdown()) {
+                    if (! isClosed) {
+                        int ext = 10;
+                        Thread.sleep(ThreadLocalRandom.current().nextInt(150 / ext, 300 / ext));
                         fileWordOperator.addWord(word);
                     } else {
-                        System.out.println(fileWordOperator.getName() + " is finished.");
                         return;
                     }
                 }
@@ -58,5 +47,20 @@ public class WordFileReader extends Thread {
             System.err.printf("Some problem occurred while reading %s.\n", fileName);
             return;
         }
+    }
+
+    public void read() {
+        System.out.println(fileName + " is reading...");
+        bufferReader();
+        System.out.println(fileName + " is readed");
+    }
+
+    public boolean isClosed() {
+        return isClosed;
+    }
+
+    @Override
+    public void close() {
+        this.isClosed = true;
     }
 }

@@ -9,13 +9,15 @@ public class DirectoryWatcher {
     private static HashMap<String, DirectoryWatcher> diretoryUnderWatch = new HashMap<>();
     private Consumer onChange;
 
-    public static DirectoryWatcher getWatcher(String directory, Consumer onChange) {
+    public static DirectoryWatcher watch(String directory, Consumer onChange) {
         System.out.println("===================>");
         if (diretoryUnderWatch.containsKey(directory)) {
             System.out.println("exists");
+            System.out.println("===================>");
             return diretoryUnderWatch.get(directory);
         } else {
             System.out.println("not exists");
+            System.out.println("===================>");
             DirectoryWatcher directoryWatcher = new DirectoryWatcher(directory, onChange);
             diretoryUnderWatch.put(directory, directoryWatcher);
             return directoryWatcher;

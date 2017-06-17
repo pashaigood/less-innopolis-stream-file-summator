@@ -26,7 +26,7 @@ public class Main {
     }
 
     private static void watch() {
-        DirectoryWatcher.getWatcher("./resources", (e) -> {
+        DirectoryWatcher.watch("./resources", (e) -> {
             startSummator();
         });
     }

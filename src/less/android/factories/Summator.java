@@ -24,7 +24,7 @@ public class Summator extends FileWordOperator {
         }
 
         if (number < 0) {
-            System.out.println("Log: " + number + " is lower then 0");
+//            System.out.println("Log: " + number + " is lower then 0");
             incorrentCount++;
             return;
         }
@@ -34,7 +34,7 @@ public class Summator extends FileWordOperator {
             result = getResult();
         }
 
-        System.out.println("Current result is: " + result);
+//        System.out.println("Current result is: " + result);
     }
 
     private Integer getResult() {
@@ -45,7 +45,7 @@ public class Summator extends FileWordOperator {
     protected void onFinish() {
         System.out.println("================>");
         System.out.println("Finale result is: " + getResult());
-        System.out.println("Count of number is: " + numbers.size());
+        System.out.println("Count of number is: " + (numbers.size() - 1));
         System.out.println("Count of incorrect numbers: " + incorrentCount);
     }
 }
